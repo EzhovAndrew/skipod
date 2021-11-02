@@ -18,8 +18,8 @@ void init_array (int tmax,
    int ny,
    double ex[ nx][ny],
    double ey[ nx][ny],
-   double hz[ nx][ny],
-   int nThreads)
+   double hz[ nx][ny]
+)
 {
   int i, j;
 
@@ -80,9 +80,6 @@ int main(int argc, char** argv) {
 
   double (*hz)[nx][ny];
   hz = (double(*)[nx][ny])malloc ((nx) * (ny) * sizeof(double));
-
-  int nThreads = 4;
-  // scanf("%d", &nThreads);
 
   init_array (
     tmax, nx, ny,
