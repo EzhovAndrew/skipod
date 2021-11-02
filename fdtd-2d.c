@@ -85,8 +85,7 @@ int main(int argc, char** argv) {
     tmax, nx, ny,
     *ex,
     *ey,
-    *hz,
-    nThreads
+    *hz
   );
 
   double bench_t_start = rtclock();
