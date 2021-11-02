@@ -46,24 +46,29 @@ void kernel_fdtd_2d(int tmax,
 
   for(t = 0; t < tmax; t++)
     {
-      #pragma omp parallel for default(none) private(j) shared(ey, ny, t)
-      for (j = 0; j < ny; j++)
+        #pragma omp parallel for default(none) private(j) shared(ny, ey, t)
+        for (j = 0; j < ny; j++)
           ey[0][j] = t;
 
-      #pragma omp parallel for default(none) private(i, j) shared(ey, hz, nx, ny)
-      for (i = 1; i < nx; i++)
-        for (j = 0; j < ny; j++)
-          ey[i][j] -= 0.5*(hz[i][j]-hz[i-1][j]);
+        #pragma omp parallel for default(none) private(i, j) shared(nx, ny, ex, ey, hz)
+        for (i = 1; i < nx; i++)
+          for (j = 1; j < ny; j++) {
+            ex[i][j] -= 0.5*(hz[i][j]-hz[i][j-1]);
+            ey[i][j] -= 0.5*(hz[i][j]-hz[i-1][j]);
+          }
 
-      #pragma omp parallel for default(none) private(i, j) shared(ex, hz, nx, ny)
-      for (i = 0; i < nx; i++)
+        #pragma omp parallel for default(none) private(i) shared(nx, ey, hz)
+        for (i = 1; i < nx; i++)
+            ey[i][0] -= 0.5*(hz[i][0]-hz[i-1][0]);
+
+        #pragma omp parallel for default(none) private(j) shared(ny, ex, hz)
         for (j = 1; j < ny; j++)
-          ex[i][j] -= 0.5*(hz[i][j]-hz[i][j-1]);
+            ex[0][j] -= 0.5*(hz[0][j]-hz[0][j-1]);
 
-      #pragma omp parallel for default(none) private(i, j) shared(hz, ex, ey, nx, ny)
-      for (i = 0; i < nx - 1; i++)
-        for (j = 0; j < ny - 1; j++)
-          hz[i][j] -= 0.7* (ex[i][j+1] - ex[i][j] + ey[i+1][j] - ey[i][j]);
+        #pragma omp parallel for default(none) private(i, j) shared(nx, ny, ex, ey, hz)
+        for (i = 0; i < nx - 1; i++)
+          for (j = 0; j < ny - 1; j++)
+            hz[i][j] -= 0.7* (ex[i][j+1] - ex[i][j] + ey[i+1][j] - ey[i][j]);
     }
 }
 
