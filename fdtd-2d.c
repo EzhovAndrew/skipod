@@ -23,7 +23,7 @@ void init_array (int tmax,
 {
   int i, j;
 
-  #pragma parallel for default(none) private(i, j) shared(ex, ey, hz, nx, ny)
+  #pragma omp parallel for default(none) private(i, j) shared(ex, ey, hz, nx, ny)
   for (i = 0; i < nx; i++)
     for (j = 0; j < ny; j++)
       {
