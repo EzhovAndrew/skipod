@@ -18,19 +18,55 @@ void init_array (int tmax,
    int ny,
    double ex[ nx][ny],
    double ey[ nx][ny],
-   double hz[ nx][ny]
+   double hz[ nx][ny],
+   int numworkers,
+   int taskid
 )
 {
-  int i, j;
+	int averow, extra, offset, mtype, rows;
+	MPI_Status status;
+	if (taskid == MASTER) {
+		averow = nx / numworkers;
+        extra = nx % numworkers;
+        offset = 0;
+        mtype = FROM_MASTER;
 
-  #pragma omp parallel for default(none) private(i, j) shared(ex, ey, hz, nx, ny)
-  for (i = 0; i < nx; i++)
-    for (j = 0; j < ny; j++)
-      {
-        ex[i][j] = ((double) i / nx) * (j+1);
-        ey[i][j] = ((double) i / ny) * (j+2);
-        hz[i][j] = ((double) i / ny) * (j+3);
-      }
+		for (int dest = 1; dest <= numworkers; dest++) {
+			rows = (dest <= extra) ? averow + 1 : averow;
+			MPI_Send(&offset, 1, MPI_INT, dest, mtype, MPI_COMM_WORLD);
+			MPI_Send(&rows, 1, MPI_INT, dest, mtype, MPI_COMM_WORLD);
+			offset = offset + rows;
+		}
+
+		mtype = TO_MASTER;
+		offset = 0;
+		int source;
+		for (source = 1; source <= numworkers; source++) {
+			rows = (source <= extra) ? averow + 1 : averow;
+			MPI_Recv(&ex[offset][0], rows * ny, MPI_DOUBLE, source, mtype, MPI_COMM_WORLD, &status);
+			MPI_Recv(&ey[offset][0], rows * ny, MPI_DOUBLE, source, mtype, MPI_COMM_WORLD, &status);
+			MPI_Recv(&hz[offset][0], rows * ny, MPI_DOUBLE, source, mtype, MPI_COMM_WORLD, &status);
+			offset = offset + rows;
+		}
+	}
+
+	if (taskid > MASTER) {
+		mtype = FROM_MASTER;
+		MPI_Recv(&offset, 1, MPI_INT, MASTER, mtype, MPI_COMM_WORLD, &status);
+		MPI_Recv(&rows, 1, MPI_INT, MASTER, mtype, MPI_COMM_WORLD, &status);
+		int i, j;
+		for (i = offset; i < offset + rows; i++)
+			for (j = 0; j < ny; j++)
+			{
+				ex[i][j] = ((double) i / nx) * (j+1);
+				ey[i][j] = ((double) i / ny) * (j+2);
+				hz[i][j] = ((double) i / ny) * (j+3);
+			}
+		mtype = TO_MASTER;
+		MPI_Send(&ex[offset][0], rows * ny, MPI_DOUBLE, MASTER, mtype, MPI_COMM_WORLD);
+		MPI_Send(&ey[offset][0], rows * ny, MPI_DOUBLE, MASTER, mtype, MPI_COMM_WORLD);
+		MPI_Send(&hz[offset][0], rows * ny, MPI_DOUBLE, MASTER, mtype, MPI_COMM_WORLD);
+	}
 }
 
 static
@@ -74,38 +110,55 @@ void kernel_fdtd_2d(int tmax,
 
 
 int main(int argc, char** argv) {
-  int tmax = TMAX;
-  int nx = NX;
-  int ny = NY;
-  double (*ex)[nx][ny];
-  ex = (double(*)[nx][ny])malloc ((nx) * (ny) * sizeof(double));
+	int numtasks;
+	int taskid;
+	int numworkers;
+	int mtype;
 
-  double (*ey)[nx][ny];
-  ey = (double(*)[nx][ny])malloc ((nx) * (ny) * sizeof(double));
+	MPI_Init(&argc,&argv);
+	MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
+	MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
+	numworkers = numtasks - 1;
 
-  double (*hz)[nx][ny];
-  hz = (double(*)[nx][ny])malloc ((nx) * (ny) * sizeof(double));
+	int tmax = TMAX;
+	int nx = NX;
+	int ny = NY;
+	double (*ex)[nx][ny];
+	ex = (double(*)[nx][ny])malloc ((nx) * (ny) * sizeof(double));
 
-  init_array (
-    tmax, nx, ny,
-    *ex,
-    *ey,
-    *hz
-  );
+	double (*ey)[nx][ny];
+	ey = (double(*)[nx][ny])malloc ((nx) * (ny) * sizeof(double));
 
-  double bench_t_start = rtclock();
-  kernel_fdtd_2d (
-    tmax, nx, ny,
-    *ex,
-    *ey,
-    *hz
-  );
+	double (*hz)[nx][ny];
+	hz = (double(*)[nx][ny])malloc ((nx) * (ny) * sizeof(double));
+	init_array (
+		tmax, nx, ny,
+		*ex,
+		*ey,
+		*hz,
+		numworkers,
+		taskid
+	);
+	// double bench_t_start;
+	// if (taskid == MASTER) {
+	// 	bench_t_start = MPI_Wtime();
+	// }
 
-  double bench_t_end = rtclock();
-  printf ("Time in seconds = %0.6lf\n", bench_t_end - bench_t_start);
-  free((void*)ex);
-  free((void*)ey);
-  free((void*)hz);
+	// kernel_fdtd_2d (
+	// 	tmax, nx, ny,
+	// 	*ex,
+	// 	*ey,
+	// 	*hz
+	// );
 
-  return 0;
+	// if (taskid == MASTER) {
+	// 	double bench_t_end = MPI_Wtime();
+	// 	printf ("Time in seconds = %0.6lf\n", bench_t_end - bench_t_start);
+	// }
+
+	// free((void*)ex);
+	// free((void*)ey);
+	// free((void*)hz);
+	MPI_Finalize();
+	return 0;
 }

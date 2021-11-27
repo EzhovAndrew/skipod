@@ -30,6 +30,9 @@
 #define NY 2600
 # endif
 #endif
+#define MASTER 0
+#define FROM_MASTER 1
+#define TO_MASTER 2
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -38,5 +41,5 @@
 #include <math.h>
 #include <time.h>
 #include <sys/time.h>
-#include <omp.h>
+#include <mpi.h>
 #endif
