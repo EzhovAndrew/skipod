@@ -33,6 +33,7 @@
 #define MASTER 0
 #define FROM_MASTER 1
 #define TO_MASTER 2
+#define DEBUG 0
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
