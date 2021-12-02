@@ -88,8 +88,8 @@ void kernel_fdtd_2d(
 			for (j = 0; j < ny; j++)
 				ey[0][j] = t;
 
-			averow = nx / numworkers;
-        	extra =  nx % numworkers;
+			averow = (nx - 1) / numworkers;
+        	extra =  (nx - 1) % numworkers;
         	offset = 1;
         	mtype = FROM_MASTER;
 			for (dest = 1; dest < numworkers; dest++) {
