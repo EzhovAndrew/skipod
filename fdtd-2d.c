@@ -216,9 +216,9 @@ int main(int argc, char** argv) {
 	MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
 	MPI_Comm_rank(MPI_COMM_WORLD, &taskid);
 
-	int tmax = 10;
-	int nx = 10;
-	int ny = 15;
+	int tmax = TMAX;
+	int nx = NX;
+	int ny = NY;
 	double (*ex)[nx][ny];
 	ex = (double(*)[nx][ny])malloc ((nx) * (ny) * sizeof(double));
 
