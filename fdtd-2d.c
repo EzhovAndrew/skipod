@@ -3,7 +3,7 @@
 
 
 static
-void MPI_init_array (int tmax,
+void init_array (int tmax,
    int nx,
    int ny,
    double ex[ nx][ny],
@@ -65,7 +65,7 @@ void MPI_init_array (int tmax,
 }
 
 static
-void MPI_kernel_fdtd_2d(
+void kernel_fdtd_2d(
 	int tmax,
 	int nx,
 	int ny,
@@ -227,7 +227,7 @@ int main(int argc, char** argv) {
 
 	double (*hz)[nx][ny];
 	hz = (double(*)[nx][ny])malloc ((nx) * (ny) * sizeof(double));
-	MPI_init_array (
+	init_array (
 		tmax, nx, ny,
 		*ex,
 		*ey,
@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
 		bench_t_start = MPI_Wtime();
 	}
 
-	MPI_kernel_fdtd_2d (
+	kernel_fdtd_2d (
 		tmax, nx, ny,
 		*ex,
 		*ey,
