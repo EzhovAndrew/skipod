@@ -102,7 +102,7 @@ void kernel_fdtd_2d(
 				offset = offset + rows;
 			}
 
-			for (i = offset; i < offset + averow - 1; i++)
+			for (i = offset; i < offset + averow; i++)
 				for (j = 1; j < ny; j++) {
 					ex[i][j] -= 0.5*(hz[i][j]-hz[i][j-1]);
 					ey[i][j] -= 0.5*(hz[i][j]-hz[i-1][j]);
