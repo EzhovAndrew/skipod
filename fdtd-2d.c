@@ -210,7 +210,7 @@ int main(int argc, char** argv) {
 	double (*hz)[maxrows][ny];
 	hz = (double(*)[maxrows][ny])malloc ((maxrows) * (ny) * sizeof(double));
 	init_array (
-		tmax, nx, ny,
+		tmax, maxrows, ny,
 		*ex,
 		*ey,
 		*hz,
@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
 	}
 
 	kernel_fdtd_2d (
-		tmax, nx, ny,
+		tmax, maxrows, ny,
 		*ex,
 		*ey,
 		*hz,
